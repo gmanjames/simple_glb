@@ -1,4 +1,4 @@
 require "./glb"
 
-elb = ELB.new
-p elb.json
+glb = GLB.new
+p glb.json

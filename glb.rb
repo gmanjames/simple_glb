@@ -1,6 +1,6 @@
 require "json"
 
-class ELB
+class GLB
   attr_reader :version, :chunks, :length
 
   Error = Class.new(StandardError)
@@ -11,9 +11,9 @@ class ELB
     end
   end
 
-  def initialize(elb_path = ENV["ELB_PATH"])
+  def initialize(glb_path = ENV["GLB_PATH"])
     @chunks = []
-    process_chunks(elb_path)
+    process_chunks(glb_path)
   end
 
   def json
@@ -23,8 +23,8 @@ class ELB
 
   private
 
-  def process_chunks(elb_path)
-    file = File.new(elb_path, "r")
+  def process_chunks(glb_path)
+    file = File.new(glb_path, "r")
 
     # ref: https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.pdf
     magic = file.read(4)
