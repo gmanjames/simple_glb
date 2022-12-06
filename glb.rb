@@ -1,15 +1,16 @@
 require "json"
+require "stringio"
 
 class GLB
-  attr_reader :version, :chunks, :length
+  attr_reader :version, :length, :chunks
 
   Error = Class.new(StandardError)
 
-  Chunk = Struct.new(:length, :type, :data) do
-    def to_s
-      "length=#{length}, type=#{type}"
-    end
-  end
+  Chunk = Struct.new(
+    :length,
+    :type,
+    :data
+  )
 
   def initialize(glb_path = ENV["GLB_PATH"])
     @chunks = []
@@ -19,6 +20,24 @@ class GLB
   def json
     json_chunk = chunks.detect { |chunk| chunk.type == "JSON" }
     JSON.parse(json_chunk.data.strip) if json_chunk
+  end
+
+  def buffers
+    chunks.select { |chunk| chunk.type == "BIN\x00" }
+  end
+
+  def buffer(index)
+    data = buffers[index]&.data
+    StringIO.new(data)
+  end
+
+  def accessData(accessor_index)
+    ac = json["accessors"][accessor_index]
+    bv = json["bufferViews"][ac["bufferView"]]
+    buff = buffer(bv["buffer"])
+    buff.seek(bv["byteOffset"] + ac["byteOffset"])
+    bin_data = buff.read(bv["byteLength"])
+    convert_data_type(bin_data, ac["componentType"])
   end
 
   private
@@ -43,6 +62,17 @@ class GLB
     end
 
     file.close
+  end
+
+  def convert_data_type(bin_data, component_type)
+    # TODO: lookup the rest of the types
+    format =
+      case component_type
+      when 5126 then "e"
+      when 5123 then "S"
+      when 5125 then "L"
+      else ""; end
+    bin_data&.unpack("#{format}*")
   end
 
   def str_to_uint32(str)

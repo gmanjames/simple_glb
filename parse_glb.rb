@@ -1,4 +1,6 @@
 require "./glb"
 
 glb = GLB.new
-p glb.json
+indice_data = glb.accessData(0)
+position_data = glb.accessData(1)
+
